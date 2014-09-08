@@ -1,6 +1,6 @@
 # dale
 
-A Clojure library designed to create file from data.
+DATA -> FILE
 
 ## Usage
 
