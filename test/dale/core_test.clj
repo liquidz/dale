@@ -117,18 +117,20 @@
       (let [name (uniq-name "foo")
             name* (str name ".edn")]
         (apply-rule {:data {:type "file" :name name*}
-                     :template "STUB"}) => (contains {:filename name})))
-
-    (stubbing [slurp         "{:a 1}"
-               load-template "a = $(data.a)"]
-      (let [name (uniq-name "foo")
-            name* (str name ".edn")]
-        (apply-rule {:data [{:type "file" :name name*}]
                      :template "STUB"}) => (contains {:filename name}))))
 
   (fact "explicit filename"
     (stubbing [slurp "{:filename \"foo.txt\" :a 1}"
                load-template "a = $(data.a)"]
-      (apply-rule {:data [{:type "file" :name (uniq-name "edn")}]
+      (apply-rule {:data {:type "file" :name (uniq-name "edn")}
                    :template "STUB"}) => (contains {:filename "foo.txt"})))
+
+  (fact "output directory"
+    (stubbing [load-data {:filename "bar.txt" :a 123}
+               load-template "a = $(a)"]
+      (apply-rule {:data "STUB"
+                   :template "STUB"
+                   :output-dir "foo"}) => (contains {:filename "foo/bar.txt"})
+      )
+    )
   )

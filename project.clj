@@ -7,6 +7,7 @@
                  [org.clojure/tools.cli "0.3.1"]
                  [cuma "0.1.0"]
                  [frontmatter "0.0.1"]
+                 [clj-text-decoration "0.0.3"]
                  ]
   :profiles {:dev {;:global-vars {*warn-on-reflection* true}
                    :dependencies [[midje "1.6.3" :exclusions [org.clojure/clojure]]

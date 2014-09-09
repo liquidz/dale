@@ -1,6 +1,7 @@
 (ns dale.core
   (:gen-class)
   (:require
+    [clojure.pprint :refer [pprint]]
     [clojure.tools.cli :refer [parse-opts]]
     [clojure.java.io :as io]
     [clojure.string :as str]
@@ -8,10 +9,21 @@
     [dale.util.file :refer :all]
     [cuma.core :refer [render]]
     [frontmatter.core :as frontmatter]
+    [text-decoration.core :as deco]
     )
   (:import [java.io FileNotFoundException]))
 
+(def ^:dynamic *color* false)
 (def ^:dynamic *debug* false)
+
+(defn- debug-log
+  [& args]
+  (when *debug*
+    (doseq [x args]
+      ((if (string? x)
+         (comp print (if *color* deco/cyan identity))
+         pprint) x))
+    (print "\n")))
 
 (def sample-rule
   {
@@ -45,17 +57,12 @@
 
 (defn- load-data-from-file
   [path]
-  (let [ext  (get-last-ext path)
+  (let [ext      (get-last-ext path)
+        filename (apply str (drop-last (if ext (+ 1 (count ext)) 0) path))
         res  (case ext
                "edn" (read-file path :conv edn/read-string)
-               (frontmatter/parse path)
-               ;{:content (read-file path)}
-               )]
-    (merge {:filename
-            (apply str (drop-last (if ext (+ 1 (count ext)) 0) path))}
-           res))
-  ;(read-file path :conv edn/read-string)
-  )
+               (frontmatter/parse path))]
+    (with-meta res {:filename filename})))
 
 (defn- load-data-from-directory
   [path]
@@ -81,17 +88,22 @@
 
 (defn- get-filename
   [data]
-  (if (sequential? data)
-    (-> data first get-filename)
-    (:filename data)))
+  (if-let [filename (:filename data)]
+    filename
+    (-> data meta :filename)))
 
 (defn apply-rule
   [rule]
   (let [data (load-data (:data rule))
         tmpl (load-template (:template rule))
-        f    #(identity {:filename (get-filename %)
+        f    #(identity {:filename (if-let [dir (:output-dir rule)]
+                                     (join dir (get-filename %))
+                                     (get-filename %))
                          :content  (render tmpl {:data %})})
         ]
+
+    (debug-log "=== DATA  ===")
+    (debug-log data)
 
     (if (:apply-template-to-each-data rule)
       (map f data)
@@ -99,16 +111,10 @@
 
 (def ^:private cli-options
   [
-   [nil  "--debug" "Switch to debug mode"
-    :id      :debug
-    :default false]
-   ["-h" "--help"  "Show this help"]
-   ]
-  )
+   [nil  "--color" "Use colors"           :default false]
+   [nil  "--debug" "Switch to debug mode" :default false]
+   ["-h" "--help"  "Show this help"]])
 
-(defn- debug-log
-  [& args]
-  (when *debug* (apply println args)))
 
 (defn- usage
   [summary]
@@ -124,32 +130,27 @@
 (defn -main
   [& args]
   (let [{:keys [options arguments summary errors]} (parse-opts args cli-options)]
-    (binding [*debug* (:debug options)]
-      ;(debug-log "options  = " options)
-      ;(debug-log "argument = " arguments)
-      ;(debug-log "summary  = " summary)
-      ;(debug-log "errors   = " errors)
-
+    (binding [*debug* (:debug options)
+              *color* (:color options)]
       (when errors
         (println "ERROR:")
         (doseq [e errors]
           (println (str "  " e)))
         (usage summary)
-        ;TODO: exit
-        )
+        (System/exit 1))
 
       (when-let [rules (some-> arguments first (read-file :conv edn/read-string))]
         (debug-log "=== RULES ===")
-        (debug-log rules "\n")
+        (debug-log rules)
 
         ;; TODO; merge default
         (if-not *debug*
           (doseq [r (:rules rules)]
             (->> r (merge (:default rules {})) apply-rule write-file))
-          (do
-            (debug-log "=== APPLY RESULT ===")
-            (doseq [r (:rules rules)]
-              (->> r (merge (:default rules {})) apply-rule debug-log))))
+          (doseq [r (:rules rules)]
+            (let [res (->> r (merge (:default rules {})) apply-rule)]
+              (debug-log "=== APPLY RESULT ===")
+              (debug-log res))))
         ; TODO: error
         )
       )
