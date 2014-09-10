@@ -130,7 +130,12 @@
                load-template "a = $(a)"]
       (apply-rule {:data "STUB"
                    :template "STUB"
-                   :output-dir "foo"}) => (contains {:filename "foo/bar.txt"})
-      )
-    )
+                   :output-dir "foo"}) => (contains {:filename "foo/bar.txt"})))
+
+  (fact "default value"
+    (stubbing [load-data {:a 123}
+               load-template "a = $(data.a), b = $(data.b)"]
+      (apply-rule {:data "STUB"
+                   :template "STUB"
+                   :default {:b 456}}) => (contains {:content "a = 123, b = 456"})))
   )

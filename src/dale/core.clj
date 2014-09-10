@@ -25,17 +25,6 @@
          pprint) x))
     (print "\n")))
 
-(def sample-rule
-  {
-   :author "uochan"
-   :rules [{
-            :data {:type "file" :name "foo.edn"}
-            :template "test.tpl"
-            ; :how-to-apply "each / all at once"
-            }]
-   }
-  )
-
 (defn read-file
   [path & {:keys [conv default] :or {conv identity, default nil}}]
   (some->> (try
@@ -96,10 +85,16 @@
   [rule]
   (let [data (load-data (:data rule))
         tmpl (load-template (:template rule))
-        f    #(identity {:filename (if-let [dir (:output-dir rule)]
-                                     (join dir (get-filename %))
-                                     (get-filename %))
-                         :content  (render tmpl {:data %})})
+        f    #(let [data* (if (map? %)
+                           (with-meta (merge (:default rule {}) %) (meta %))
+                           %)
+                    filename (get-filename data*)
+                    filename (if-let [dir (:output-dir rule)]
+                               (join dir filename)
+                               filename)
+                    ]
+                {:filename filename
+                 :content  (render tmpl {:data data*})})
         ]
 
     (debug-log "=== DATA  ===")
@@ -146,9 +141,9 @@
         ;; TODO; merge default
         (if-not *debug*
           (doseq [r (:rules rules)]
-            (->> r (merge (:default rules {})) apply-rule write-file))
+            (->> r (merge {:default (:default rules {})}) apply-rule write-file))
           (doseq [r (:rules rules)]
-            (let [res (->> r (merge (:default rules {})) apply-rule)]
+            (let [res (->> r (merge {:default (:default rules {})}) apply-rule)]
               (debug-log "=== APPLY RESULT ===")
               (debug-log res))))
         ; TODO: error
