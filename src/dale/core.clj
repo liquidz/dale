@@ -81,21 +81,29 @@
     filename
     (-> data meta :filename)))
 
+(defn- merge-default-data-map
+  [rule data]
+  (if (map? data)
+    (with-meta (merge (:default rule {})
+                      data)
+               (meta data))
+    data))
+
+(defn- apply-template
+  [rule data]
+  (let [tmpl     (load-template (:template rule))
+        data*    (merge-default-data-map rule data)
+        filename (get-filename data*)
+        filename (if-let [dir (:output-dir rule)]
+                   (join dir filename)
+                   filename)]
+    {:filename filename
+     :content  (render tmpl {:data data*})}))
+
 (defn apply-rule
   [rule]
-  (let [data (load-data (:data rule))
-        tmpl (load-template (:template rule))
-        f    #(let [data* (if (map? %)
-                           (with-meta (merge (:default rule {}) %) (meta %))
-                           %)
-                    filename (get-filename data*)
-                    filename (if-let [dir (:output-dir rule)]
-                               (join dir filename)
-                               filename)
-                    ]
-                {:filename filename
-                 :content  (render tmpl {:data data*})})
-        ]
+  (let [data (-> rule :data load-data)
+        f    (partial apply-template rule)]
 
     (debug-log "=== DATA  ===")
     (debug-log data)
