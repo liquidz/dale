@@ -105,8 +105,7 @@
   (let [data (-> rule :data load-data)
         f    (partial apply-template rule)]
 
-    (debug-log "=== DATA  ===")
-    (debug-log data)
+    (debug-log "=== DATA  ===\n" data)
 
     (if (:apply-template-to-each-data rule)
       (map f data)
@@ -130,6 +129,15 @@
                ""]]
     (doseq [t texts] (println t))))
 
+(defn run
+  [rules]
+  (doseq [r (:rules rules)]
+    (let [r (assoc r :default (merge (:default rules {})
+                                     (:default r {})))]
+      (if-not *debug*
+        (->> r apply-rule write-file)
+        (->> r apply-rule (debug-log "=== APPLY RESULT ===\n"))))))
+
 (defn -main
   [& args]
   (let [{:keys [options arguments summary errors]} (parse-opts args cli-options)]
@@ -143,17 +151,8 @@
         (System/exit 1))
 
       (when-let [rules (some-> arguments first (read-file :conv edn/read-string))]
-        (debug-log "=== RULES ===")
-        (debug-log rules)
-
-        ;; TODO; merge default
-        (if-not *debug*
-          (doseq [r (:rules rules)]
-            (->> r (merge {:default (:default rules {})}) apply-rule write-file))
-          (doseq [r (:rules rules)]
-            (let [res (->> r (merge {:default (:default rules {})}) apply-rule)]
-              (debug-log "=== APPLY RESULT ===")
-              (debug-log res))))
+        (debug-log "=== RULES ===\n" rules)
+        (run rules)
         ; TODO: error
         )
       )

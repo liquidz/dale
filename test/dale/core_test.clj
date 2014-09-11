@@ -139,3 +139,28 @@
                    :template "STUB"
                    :default {:b 456}}) => (contains {:content "a = 123, b = 456"})))
   )
+
+
+(facts "run should work fine."
+  (let [res (atom nil)
+        wf  #(reset! res %)]
+    (fact ""
+      (stubbing [load-data {:a 123}
+                 load-template "a = $(data.a)"
+                 write-file wf]
+        (run {:rules [{:data "STUB" :template "STUB"}]})
+        (:content @res) => "a = 123"))
+
+    (fact ""
+      (stubbing [load-data {:a 123}
+                 load-template "a = $(data.a), b = $(data.b)"
+                 write-file wf]
+        (run {:default {:b 345} :rules [{:data "STUB" :template "STUB"}]})
+        (:content @res) => "a = 123, b = 345"))
+
+    (fact ""
+      (stubbing [load-data {:a 123}
+                 load-template "a = $(data.a), b = $(data.b), c = $(data.c)"
+                 write-file wf]
+        (run {:default {:b 345} :rules [{:data "STUB" :template "STUB" :default {:c 678}}]})
+        (:content @res) => "a = 123, b = 345, c = 678"))))
