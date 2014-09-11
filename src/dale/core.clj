@@ -1,29 +1,15 @@
 (ns dale.core
   (:gen-class)
   (:require
-    [clojure.pprint :refer [pprint]]
     [clojure.tools.cli :refer [parse-opts]]
     [clojure.java.io :as io]
     [clojure.string :as str]
     [clojure.edn :as edn]
+    [dale.debug :refer :all]
     [dale.util.file :refer :all]
     [cuma.core :refer [render]]
-    [frontmatter.core :as frontmatter]
-    [text-decoration.core :as deco]
-    )
+    [frontmatter.core :as frontmatter])
   (:import [java.io FileNotFoundException]))
-
-(def ^:dynamic *color* false)
-(def ^:dynamic *debug* false)
-
-(defn- debug-log
-  [& args]
-  (when *debug*
-    (doseq [x args]
-      ((if (string? x)
-         (comp print (if *color* deco/cyan identity))
-         pprint) x))
-    (print "\n")))
 
 (defn read-file
   [path & {:keys [conv default] :or {conv identity, default nil}}]
@@ -116,7 +102,6 @@
    [nil  "--color" "Use colors"           :default false]
    [nil  "--debug" "Switch to debug mode" :default false]
    ["-h" "--help"  "Show this help"]])
-
 
 (defn- usage
   [summary]
