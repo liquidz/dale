@@ -144,21 +144,21 @@
 (facts "run should work fine."
   (let [res (atom nil)
         wf  #(reset! res %)]
-    (fact ""
+    (fact "normal usage"
       (stubbing [load-data {:a 123}
                  load-template "a = $(data.a)"
                  write-file wf]
         (run {:rules [{:data "STUB" :template "STUB"}]})
         (:content @res) => "a = 123"))
 
-    (fact ""
+    (fact "global default"
       (stubbing [load-data {:a 123}
                  load-template "a = $(data.a), b = $(data.b)"
                  write-file wf]
         (run {:default {:b 345} :rules [{:data "STUB" :template "STUB"}]})
         (:content @res) => "a = 123, b = 345"))
 
-    (fact ""
+    (fact "global default and local default"
       (stubbing [load-data {:a 123}
                  load-template "a = $(data.a), b = $(data.b), c = $(data.c)"
                  write-file wf]
