@@ -92,19 +92,19 @@
 (facts "apply-rule should work fine."
   (fact "single data"
     (stubbing [load-data     {:a 123}
-               load-template "a = $(data.a)"]
+               load-template "a = $(a)"]
       (apply-rule {:data "STUB"
                    :template "STUB"}) => (contains {:content "a = 123"})))
 
   (fact "multiple data"
     (stubbing [load-data     [{:a 123} {:a 456}]
-               load-template "@(for data)a = $(a)@(end)"]
+               load-template "@(for .)a = $(a)@(end)"]
       (apply-rule {:data ["STUB" "STUB"]
                    :template "STUB"}) => (contains {:content "a = 123a = 456"})))
 
   (fact "aplly each data to template"
     (stubbing [load-data [{:a 123} {:a 456}]
-               load-template "a = $(data.a)"]
+               load-template "a = $(a)"]
       (let [res (apply-rule {:data ["STUB" "STUB"]
                              :template "STUB"
                              :apply-template-to-each-data true})]
@@ -113,7 +113,7 @@
 
   (fact "implicit filename"
     (stubbing [slurp         "{:a 1}"
-               load-template "a = $(data.a)"]
+               load-template "a = $(a)"]
       (let [name (uniq-name "foo")
             name* (str name ".edn")]
         (apply-rule {:data {:type "file" :name name*}
@@ -121,7 +121,7 @@
 
   (fact "explicit filename"
     (stubbing [slurp "{:filename \"foo.txt\" :a 1}"
-               load-template "a = $(data.a)"]
+               load-template "a = $(a)"]
       (apply-rule {:data {:type "file" :name (uniq-name "edn")}
                    :template "STUB"}) => (contains {:filename "foo.txt"})))
 
@@ -134,7 +134,7 @@
 
   (fact "default value"
     (stubbing [load-data {:a 123}
-               load-template "a = $(data.a), b = $(data.b)"]
+               load-template "a = $(a), b = $(b)"]
       (apply-rule {:data "STUB"
                    :template "STUB"
                    :default {:b 456}}) => (contains {:content "a = 123, b = 456"})))
@@ -146,21 +146,21 @@
         wf  #(reset! res %)]
     (fact "normal usage"
       (stubbing [load-data {:a 123}
-                 load-template "a = $(data.a)"
+                 load-template "a = $(a)"
                  write-file wf]
         (run {:rules [{:data "STUB" :template "STUB"}]})
         (:content @res) => "a = 123"))
 
     (fact "global default"
       (stubbing [load-data {:a 123}
-                 load-template "a = $(data.a), b = $(data.b)"
+                 load-template "a = $(a), b = $(b)"
                  write-file wf]
         (run {:default {:b 345} :rules [{:data "STUB" :template "STUB"}]})
         (:content @res) => "a = 123, b = 345"))
 
     (fact "global default and local default"
       (stubbing [load-data {:a 123}
-                 load-template "a = $(data.a), b = $(data.b), c = $(data.c)"
+                 load-template "a = $(a), b = $(b), c = $(c)"
                  write-file wf]
         (run {:default {:b 345} :rules [{:data "STUB" :template "STUB" :default {:c 678}}]})
         (:content @res) => "a = 123, b = 345, c = 678"))))

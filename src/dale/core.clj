@@ -84,7 +84,7 @@
                    (join dir filename)
                    filename)]
     {:filename filename
-     :content  (render tmpl {:data data*})}))
+     :content  (render tmpl (if (map? data*) data* {:. data*}))}))
 
 (defn apply-rule
   [rule]
