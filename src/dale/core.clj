@@ -117,7 +117,8 @@
 (defn run
   [rules]
   (doseq [r (:rules rules)]
-    (let [r (assoc r :default-data (merge (:default-data rules {})
+    (let [r (merge (:default-rule rules {}) r)
+          r (assoc r :default-data (merge (:default-data rules {})
                                           (:default-data r {})))]
       (if-not *debug*
         (->> r apply-rule write-file)

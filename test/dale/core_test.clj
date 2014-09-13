@@ -164,13 +164,14 @@
                  write-file wf]
         (run {:default-data {:b 345}
               :rules [{:data "STUB" :template "STUB" :default-data {:c 678}}]})
-        (:content @res) => "a = 123, b = 345, c = 678")))
+        (:content @res) => "a = 123, b = 345, c = 678"))
 
-  ;(fact "global default rule"
-  ;  (run {
-  ;        :default-rule {}
-  ;        })
-  ;  )
+    (fact "global default rule"
+      (stubbing [load-data (with-meta {:a 123} {:filename "foo"})
+                 load-template "a = $(a)"
+                 write-file wf]
+        (run {:default-rule {:output-dir "testdirectory"}
+              :rules [{:data "STUB" :template "STUB"}]})
+        (:filename @res) => (contains "testdirectory")))
 
-
-  )
+    ))
