@@ -97,11 +97,16 @@
       (map f data)
       (f data))))
 
+(defn filter-rules
+  [s rules]
+  (filter #(not= -1 (.indexOf (:name %) s)) rules))
+
 (def ^:private cli-options
   [
-   [nil  "--color" "Use colors"           :default false]
-   [nil  "--debug" "Switch to debug mode" :default false]
-   ["-h" "--help"  "Show this help"]])
+   [nil  "--filter FILTER" "Filtering rules"      :default nil]
+   [nil  "--color"         "Use colors"           :default false]
+   [nil  "--debug"         "Switch to debug mode" :default false]
+   ["-h" "--help"          "Show this help"]])
 
 (defn- usage
   [summary]
@@ -137,9 +142,13 @@
         (System/exit 1))
 
       (when-let [rules (some-> arguments first (read-file :conv edn/read-string))]
-        (debug-log "=== RULES ===\n" rules)
-        (run rules)
-        ; TODO: error
+        (let [rules (if-let [s (:filter options)]
+                      (assoc rules :rules (filter-rules s (:rules rules)))
+                      rules)]
+          (debug-log "=== RULES ===\n" rules)
+          (run rules)
+          ; TODO: error
+          )
         )
       )
     )

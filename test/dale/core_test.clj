@@ -148,9 +148,16 @@
                load-template "a = $(a), b = $(b)"]
       (apply-rule {:data "STUB"
                    :template "STUB"
-                   :default-data {:b 456}}) => (contains {:content "a = 123, b = 456"})))
-  )
+                   :default-data {:b 456}}) => (contains {:content "a = 123, b = 456"}))))
 
+(fact "filter-rules should work fine."
+  (let [rules [{:name "foo" :data []}
+               {:name "foobar" :data []}
+               {:name "barfoo" :data []}
+               {:name "xxfooxx" :data []}]]
+    (count (filter-rules "foo" rules)) => 4
+    (count (filter-rules "bar" rules)) => 2
+    (count (filter-rules "xx"  rules)) => 1))
 
 (facts "run should work fine."
   (let [res (atom nil)
