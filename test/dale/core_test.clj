@@ -125,6 +125,17 @@
       (apply-rule {:data {:type "file" :name (uniq-name "edn")}
                    :template "STUB"}) => (contains {:filename "foo.txt"})))
 
+  (fact "filename in rule"
+    (stubbing [load-data {:a 123}
+               load-template "a = $(a)"]
+      (apply-rule {:data "STUB" :template "STUB" :default-data {:filename "foo.txt"}})
+      => (contains {:filename "foo.txt"})
+
+      (apply-rule {:data "STUB" :template "STUB"
+                   :output-dir "testdirectory"
+                   :default-data {:filename "foo.txt"}})
+      => (contains {:filename (join "testdirectory" "foo.txt")})))
+
   (fact "output directory"
     (stubbing [load-data {:filename "bar.txt" :a 123}
                load-template "a = $(a)"]
@@ -173,5 +184,4 @@
         (run {:default-rule {:output-dir "testdirectory"}
               :rules [{:data "STUB" :template "STUB"}]})
         (:filename @res) => (contains "testdirectory")))
-
     ))
