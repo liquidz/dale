@@ -132,12 +132,12 @@
                    :template "STUB"
                    :output-dir "foo"}) => (contains {:filename "foo/bar.txt"})))
 
-  (fact "default value"
+  (fact "default data"
     (stubbing [load-data {:a 123}
                load-template "a = $(a), b = $(b)"]
       (apply-rule {:data "STUB"
                    :template "STUB"
-                   :default {:b 456}}) => (contains {:content "a = 123, b = 456"})))
+                   :default-data {:b 456}}) => (contains {:content "a = 123, b = 456"})))
   )
 
 
@@ -151,16 +151,26 @@
         (run {:rules [{:data "STUB" :template "STUB"}]})
         (:content @res) => "a = 123"))
 
-    (fact "global default"
+    (fact "global default data"
       (stubbing [load-data {:a 123}
                  load-template "a = $(a), b = $(b)"
                  write-file wf]
-        (run {:default {:b 345} :rules [{:data "STUB" :template "STUB"}]})
+        (run {:default-data {:b 345} :rules [{:data "STUB" :template "STUB"}]})
         (:content @res) => "a = 123, b = 345"))
 
-    (fact "global default and local default"
+    (fact "global default data and local default data"
       (stubbing [load-data {:a 123}
                  load-template "a = $(a), b = $(b), c = $(c)"
                  write-file wf]
-        (run {:default {:b 345} :rules [{:data "STUB" :template "STUB" :default {:c 678}}]})
-        (:content @res) => "a = 123, b = 345, c = 678"))))
+        (run {:default-data {:b 345}
+              :rules [{:data "STUB" :template "STUB" :default-data {:c 678}}]})
+        (:content @res) => "a = 123, b = 345, c = 678")))
+
+  ;(fact "global default rule"
+  ;  (run {
+  ;        :default-rule {}
+  ;        })
+  ;  )
+
+
+  )

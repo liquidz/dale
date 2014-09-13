@@ -70,7 +70,7 @@
 (defn- merge-default-data-map
   [rule data]
   (if (map? data)
-    (with-meta (merge (:default rule {})
+    (with-meta (merge (:default-data rule {})
                       data)
                (meta data))
     data))
@@ -117,8 +117,8 @@
 (defn run
   [rules]
   (doseq [r (:rules rules)]
-    (let [r (assoc r :default (merge (:default rules {})
-                                     (:default r {})))]
+    (let [r (assoc r :default-data (merge (:default-data rules {})
+                                          (:default-data r {})))]
       (if-not *debug*
         (->> r apply-rule write-file)
         (->> r apply-rule (debug-log "=== APPLY RESULT ===\n"))))))
