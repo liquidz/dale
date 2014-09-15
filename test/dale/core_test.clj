@@ -102,6 +102,13 @@
       (apply-rule {:data ["STUB" "STUB"]
                    :template "STUB"}) => (contains {:content "a = 123a = 456"})))
 
+  (fact "multiple data with default data"
+    (stubbing [load-data     [{:a 123} {:a 456}]
+               load-template "@(for .)a=$(a),b=$(b)@(end)"]
+      (apply-rule {:data ["STUB" "STUB"]
+                   :template "STUB"
+                   :default-data {:b 789}}) => (contains {:content "a=123,b=789a=456,b=789"})))
+
   (fact "aplly each data to template"
     (stubbing [load-data [{:a 123} {:a 456}]
                load-template "a = $(a)"]
@@ -192,3 +199,14 @@
               :rules [{:data "STUB" :template "STUB"}]})
         (:filename @res) => (contains "testdirectory")))
     ))
+
+;(fact "meta-merge should work fine."
+;  (let [res (meta-merge nil (with-meta {:x 1} {:a 1}))]
+;    res => {:x 1}
+;    (meta res) => {:a 1})
+;
+;  (let [res (meta-merge (with-meta {:x 1} {:a 1}) (with-meta {:y 2} {:b 1}))]
+;    res => {:x 1 :y 2}
+;    (meta res) => {:a 1 :b 2})
+;
+;  )
